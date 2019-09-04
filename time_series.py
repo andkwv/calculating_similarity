@@ -1,19 +1,42 @@
 #%%
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+import numpy
+from numpy import pad
 
 #%%
-location = './data/time_series/'
-time_series_1 = (location + 'experiment_01.csv')
-time_series_2 = (location + 'experiment_02.csv')
+data_location = './data/time_series/'
+doc1 = (data_location + 'OrdonezA_ADLs.txt')
+doc2 = (data_location + 'OrdonezB_ADLs.txt')
 
-#%%
-def time_series_similiarity(time_series_1, time_series_2):
-    time_series = [open(time_series_1).read(), open(time_series_2).read()]
-    vectorized = TfidfVectorizer().fit_transform(time_series)
-    similarity_vector = vectorized * vectorized.T
-    similarity_vector = similarity_vector.toarray()
 
-    # return similarity_value
-    return similarity_vector[0][1]
+def doc_similarity(doc1, doc2):
+    #
+    vocabulary = open(doc1).read().split(' ')
+    vocabulary.append(doc2)
 
-print(time_series_similiarity(time_series_1, time_series_2))
+    vectorizer = CountVectorizer()
+    res = vectorizer.fit_transform(vocabulary).todense()
+    vocabulary = vectorizer.vocabulary_
+
+    #
+    doc1 = open(doc1).read().split(' ')
+    doc2 = open(doc2).read().split(' ')
+
+    #
+    vectorizer = CountVectorizer(vocabulary=vocabulary)
+    doc1 = vectorizer.fit_transform(doc1).todense()
+    doc2 = vectorizer.fit_transform(doc2).todense()
+
+    #
+    doc1 = doc1.sum(axis=0)
+    doc2 = doc2.sum(axis=0)
+
+    #%%
+    dot_product = float(numpy.inner(doc1, doc2))
+    doc1_length = numpy.linalg.norm(doc1)
+    doc2_length = numpy.linalg.norm(doc2)
+
+    return dot_product / (doc1_length * doc2_length)
+
+
+print(doc_similarity(doc1, doc2))
